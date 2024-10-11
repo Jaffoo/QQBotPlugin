@@ -5,6 +5,8 @@ VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IPluginBase", "IPluginBase\IPluginBase.csproj", "{A9DBD73F-A383-4818-A425-B84B81A553E2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{4D11623A-CD4A-43B6-8D6B-AE43B5E3F2BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{A9DBD73F-A383-4818-A425-B84B81A553E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9DBD73F-A383-4818-A425-B84B81A553E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9DBD73F-A383-4818-A425-B84B81A553E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D11623A-CD4A-43B6-8D6B-AE43B5E3F2BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D11623A-CD4A-43B6-8D6B-AE43B5E3F2BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D11623A-CD4A-43B6-8D6B-AE43B5E3F2BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D11623A-CD4A-43B6-8D6B-AE43B5E3F2BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

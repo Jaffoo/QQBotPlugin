@@ -3,7 +3,6 @@ using FluentScheduler;
 using SqlSugar;
 using System.Reactive.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using TBC.CommonLib;
 using UnifyBot;
 using UnifyBot.Receiver.EventReceiver;
@@ -23,7 +22,14 @@ public class PluginRegister
     private static readonly Dictionary<Plugin, IPluginBase> LoadedPlugins = [];
     private static Bot? _bot;
 
-    public static List<Plugin> Plugins => Db.Queryable<Plugin>().ToList();
+    public static List<Plugin> Plugins
+    {
+        get
+        {
+            if (Db == null) return [];
+            return Db.Queryable<Plugin>().ToList();
+        }
+    }
 
     /// <summary>
     /// 加载插件
