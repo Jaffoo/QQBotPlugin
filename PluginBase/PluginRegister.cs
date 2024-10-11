@@ -87,14 +87,14 @@ public class PluginRegister
     /// 默认全部好友，如果传参qqs，则是特定人能使用
     /// </summary>
     /// <param name="qqs"></param>
-    public static void FriendControlPlugin(List<long> qqs)
+    public static void FriendControlPlugin(List<long>? qqs = null)
     {
         if (_bot == null) throw new MissingFieldException("如果使用了qq机器人，请在加载插件的方法中传入机器人对象");
         _bot.MessageReceived.OfType<PrivateReceiver>().Subscribe(async x =>
         {
             var text = x.Message.GetPlainText();
             if (text.IsNullOrWhiteSpace()) return;
-            if (!qqs.Contains(x.SenderQQ)) return;
+            if (qqs != null && !qqs.Contains(x.SenderQQ)) return;
             var msg = Handle(text);
             if (msg.IsNullOrWhiteSpace()) return;
             await x.SendMessage(msg);
@@ -106,14 +106,14 @@ public class PluginRegister
     /// 默认全部群，如果传参groups，则是特定群能使用
     /// </summary>
     /// <param name="groups"></param>
-    public static void GroupControlPlugin(List<long> groups)
+    public static void GroupControlPlugin(List<long>? groups = null)
     {
         if (_bot == null) throw new MissingFieldException("如果使用了qq机器人，请在加载插件的方法中传入机器人对象");
         _bot.MessageReceived.OfType<GroupReceiver>().Subscribe(async x =>
         {
             var text = x.Message.GetPlainText();
             if (text.IsNullOrWhiteSpace()) return;
-            if (!groups.Contains(x.GroupQQ)) return;
+            if (groups != null && !groups.Contains(x.GroupQQ)) return;
             var msg = Handle(text);
             if (msg.IsNullOrWhiteSpace()) return;
             await x.SendMessage(msg);
