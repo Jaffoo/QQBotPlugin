@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginBase", "PluginBase\PluginBase.csproj", "{A9DBD73F-A383-4818-A425-B84B81A553E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IPluginBase", "IPluginBase\IPluginBase.csproj", "{A9DBD73F-A383-4818-A425-B84B81A553E2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

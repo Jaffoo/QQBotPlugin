@@ -15,7 +15,7 @@ namespace PluginBase;
 /// <param name="name">插件名</param>
 /// <param name="version">插件版本</param>
 /// <param name="desc">插件描述</param>
-public abstract class PluginBase(string dbSource = "data/main.db") : IDisposable
+public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposable
 {
     private bool disposedValue;
 

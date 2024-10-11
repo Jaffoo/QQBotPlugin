@@ -20,7 +20,7 @@ public class PluginRegister
 #pragma warning disable CS8618
     private static SqlSugarClient Db;
 #pragma warning restore CS8618
-    private static readonly Dictionary<Plugin, PluginBase> LoadedPlugins = [];
+    private static readonly Dictionary<Plugin, IPluginBase> LoadedPlugins = [];
     private static Bot? _bot;
 
     public static List<Plugin> Plugins => Db.Queryable<Plugin>().ToList();
@@ -45,14 +45,14 @@ public class PluginRegister
             if (type == null) continue;
             var instanceObj = Activator.CreateInstance(type);
             // 获取私有属性的 PropertyInfo
-            var pFields = typeof(PluginBase).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+            var pFields = typeof(IPluginBase).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
             // 检查属性信息是否为 null
             if (pFields != null)
             {
                 var pBot = pFields.FirstOrDefault(x => x.Name.Contains("_bot"));
                 pBot?.SetValue(instanceObj, bot);
             }
-            using PluginBase? instance = instanceObj as PluginBase;
+            using IPluginBase? instance = instanceObj as IPluginBase;
             if (instance == null) continue;
             Plugin temp;
             Db ??= instance.Db;
