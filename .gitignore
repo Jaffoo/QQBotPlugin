@@ -17,6 +17,7 @@
 mono_crash.*
 
 # Build results
+[Dd]ug
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
@@ -26,7 +27,7 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
-[Bb]in/Debug/**
+[Bb]in/
 [Oo]bj/
 [Oo]ut/
 [Ll]og/
@@ -358,4 +359,3 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/IPluginBase/bin/Debug/IPluginBase.0.0.2.nupkg
