@@ -16,7 +16,15 @@ namespace PluginBase;
 /// <typeparam name="T">插件表</typeparam>
 public class PluginRegister
 {
-    private static SqlSugarClient? Db;
+    private static SqlSugarClient? _db;
+    private static SqlSugarClient Db
+    {
+        get
+        {
+            _db!.Open();
+            return _db;
+        }
+    }
     private static readonly Dictionary<PluginBT, IPluginBase> LoadedPlugins = [];
     private static Bot? _bot;
 
@@ -35,7 +43,9 @@ public class PluginRegister
     public static void LoadPlugins(SqlSugarClient db, Bot? bot = null)
     {
         _bot = bot;
-        Db = db;
+        _db = db;
+        AutoLoadPlugin();
+        _db.CurrentConnectionConfig.IsAutoCloseConnection = false;
         if (!Directory.Exists("plugins")) Directory.CreateDirectory("plugins");
         var files = new DirectoryInfo("plugins").GetFiles();
         foreach (var item in files)
@@ -82,7 +92,6 @@ public class PluginRegister
             if (!LoadedPlugins.Any(x => x.Key.Name == instance.Name && x.Key.Version == instance.Version))
                 LoadedPlugins.Add(temp, instance);
             if (bot != null) ExcutePlugin(bot);
-            AutoLoadPlugin();
         }
     }
 
@@ -214,6 +223,7 @@ public class PluginRegister
     /// </summary>
     private static void AutoLoadPlugin()
     {
+        JobManager.Initialize();
         JobManager.RemoveAllJobs();
         JobManager.AddJob(() => LoadPlugins(Db!, _bot), x => x.WithName("AutoLoadPlugins").ToRunNow().AndEvery(10).Minutes());
     }
