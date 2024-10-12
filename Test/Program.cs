@@ -43,6 +43,10 @@ internal class Program
             }
         };
         SqlSugarClient sqlSugarClient = new(config);
+        if (!Directory.Exists("data")) Directory.CreateDirectory("data");
+        sqlSugarClient.DbMaintenance.CreateDatabase();
+        sqlSugarClient.CodeFirst.InitTables<ConfigBT>();
+        sqlSugarClient.CodeFirst.InitTables<PluginBT>();
         return sqlSugarClient;
     }
 }

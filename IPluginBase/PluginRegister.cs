@@ -70,7 +70,7 @@ public class PluginRegister
                     Usage = instance.Useage,
                     Desc = instance.Desc
                 };
-                var id = Db.Insertable(temp).ExecuteReturnBigIdentity();
+                var id = Db.Insertable(temp).ExecuteReturnIdentity();
                 temp.Id = id;
                 instance.PluginId = id;
             }

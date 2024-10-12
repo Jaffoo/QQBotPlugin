@@ -5,7 +5,9 @@ VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IPluginBase", "IPluginBase\IPluginBase.csproj", "{A9DBD73F-A383-4818-A425-B84B81A553E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{4D11623A-CD4A-43B6-8D6B-AE43B5E3F2BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Test\Test.csproj", "{4D11623A-CD4A-43B6-8D6B-AE43B5E3F2BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestPlugin", "TestPlugin\TestPlugin.csproj", "{EE9439B4-9FE8-411A-8E94-BD25E2B38AD6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{4D11623A-CD4A-43B6-8D6B-AE43B5E3F2BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4D11623A-CD4A-43B6-8D6B-AE43B5E3F2BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4D11623A-CD4A-43B6-8D6B-AE43B5E3F2BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE9439B4-9FE8-411A-8E94-BD25E2B38AD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE9439B4-9FE8-411A-8E94-BD25E2B38AD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE9439B4-9FE8-411A-8E94-BD25E2B38AD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE9439B4-9FE8-411A-8E94-BD25E2B38AD6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

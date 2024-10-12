@@ -12,7 +12,7 @@ public class ConfigBT
     /// id
     /// </summary>
     [SugarColumn(IsPrimaryKey = true, IsIdentity = true)]
-    public long Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// 插件id
@@ -41,7 +41,7 @@ public class PluginBT
     /// id
     /// </summary>
     [SugarColumn(IsPrimaryKey = true, IsIdentity = true)]
-    public long Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// 插件名
