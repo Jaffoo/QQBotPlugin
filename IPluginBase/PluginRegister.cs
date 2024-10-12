@@ -44,9 +44,11 @@ public class PluginRegister
     /// </summary>
     public static void LoadPlugins(SqlSugarClient db, Bot? bot = null)
     {
-        _initTimer = true;
         if (!_initTimer)
+        {
             AutoLoadPlugin();
+            _initTimer = true;
+        }
         _bot = bot;
         _db = db;
         _db.CurrentConnectionConfig.IsAutoCloseConnection = false;
