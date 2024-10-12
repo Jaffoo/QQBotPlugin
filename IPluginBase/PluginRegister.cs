@@ -16,27 +16,26 @@ namespace PluginBase;
 /// <typeparam name="T">插件表</typeparam>
 public class PluginRegister
 {
-#pragma warning disable CS8618
-    private static SqlSugarClient Db;
-#pragma warning restore CS8618
-    private static readonly Dictionary<Plugin, IPluginBase> LoadedPlugins = [];
+    private static SqlSugarClient? Db;
+    private static readonly Dictionary<PluginBT, IPluginBase> LoadedPlugins = [];
     private static Bot? _bot;
 
-    public static List<Plugin> Plugins
+    public static List<PluginBT> Plugins
     {
         get
         {
             if (Db == null) return [];
-            return Db.Queryable<Plugin>().ToList();
+            return Db.Queryable<PluginBT>().ToList();
         }
     }
 
     /// <summary>
     /// 加载插件
     /// </summary>
-    public static void LoadPlugins(Bot? bot = null)
+    public static void LoadPlugins(SqlSugarClient db, Bot? bot = null)
     {
         _bot = bot;
+        Db = db;
         if (!Directory.Exists("plugins")) Directory.CreateDirectory("plugins");
         var files = new DirectoryInfo("plugins").GetFiles();
         foreach (var item in files)
@@ -60,8 +59,7 @@ public class PluginRegister
             }
             using IPluginBase? instance = instanceObj as IPluginBase;
             if (instance == null) continue;
-            Plugin temp;
-            Db ??= instance.Db;
+            PluginBT temp;
             if (!Plugins.Exists(t => t.Name == instance.Name && t.Version == instance.Version))
             {
                 temp = new()
@@ -133,7 +131,7 @@ public class PluginRegister
     {
         Plugins.Clear();
         LoadedPlugins.Clear();
-        LoadPlugins(bot);
+        LoadPlugins(Db!, bot);
     }
 
     /// <summary>
@@ -143,7 +141,7 @@ public class PluginRegister
     {
         var plugin = Plugins.FirstOrDefault(t => t.Id == id) ?? throw new Exception("插件不存在");
         plugin.Enable = false;
-        var b = Db.Updateable(plugin).ExecuteCommand() > 0;
+        var b = Db!.Updateable(plugin).ExecuteCommand() > 0;
         if (b)
         {
             var load = LoadedPlugins.FirstOrDefault(x => x.Key.Id == id);
@@ -166,7 +164,7 @@ public class PluginRegister
             else x.Enable = false;
         });
 
-        var b = Db.Updateable(list).ExecuteCommand() > 0;
+        var b = Db!.Updateable(list).ExecuteCommand() > 0;
         if (b)
         {
             var load = LoadedPlugins.FirstOrDefault(x => x.Key.Id == id);
@@ -181,10 +179,10 @@ public class PluginRegister
     /// </summary>
     public static void DelPlugin(long id)
     {
-        var b = Db.Deleteable<Plugin>().In(id).ExecuteCommand() > 0;
+        var b = Db!.Deleteable<PluginBT>().In(id).ExecuteCommand() > 0;
         if (b)
         {
-            Db.Deleteable<Config>(x => x.PluginId == id).ExecuteCommand();
+            Db.Deleteable<ConfigBT>(x => x.PluginId == id).ExecuteCommand();
             var item = LoadedPlugins.FirstOrDefault(x => x.Key.Id == id);
             if (!item.Value.JobName.IsNullOrWhiteSpace())
                 JobManager.RemoveJob(item.Value.JobName);
@@ -195,7 +193,7 @@ public class PluginRegister
             if (dir.Exists)
                 dir.Delete(true);
             //删除配置数据
-            Db.Deleteable<Config>().Where(x => x.PluginId == item.Value.PluginId).ExecuteCommand();
+            Db.Deleteable<ConfigBT>().Where(x => x.PluginId == item.Value.PluginId).ExecuteCommand();
         }
     }
 
@@ -217,7 +215,7 @@ public class PluginRegister
     private static void AutoLoadPlugin()
     {
         JobManager.RemoveAllJobs();
-        JobManager.AddJob(() => LoadPlugins(_bot), x => x.WithName("AutoLoadPlugins").ToRunNow().AndEvery(10).Minutes());
+        JobManager.AddJob(() => LoadPlugins(Db!, _bot), x => x.WithName("AutoLoadPlugins").ToRunNow().AndEvery(10).Minutes());
     }
 
     /// <summary>
@@ -319,7 +317,7 @@ public class PluginRegister
         return "";
     }
 
-    private static string CreatePluginTable(List<Plugin> plugins)
+    private static string CreatePluginTable(List<PluginBT> plugins)
     {
         var table = new ConsoleTable("标识", "插件名", "版本", "状态");
         foreach (var plugin in plugins)

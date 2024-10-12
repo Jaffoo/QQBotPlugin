@@ -5,7 +5,8 @@ namespace PluginBase;
 /// <summary>
 /// 插件配置类
 /// </summary>
-public class Config
+[SugarTable(TableName = "Config")]
+public class ConfigBT
 {
     /// <summary>
     /// id
@@ -33,7 +34,8 @@ public class Config
 /// <summary>
 /// 插件表
 /// </summary>
-public class Plugin
+[SugarTable(TableName = "Plugin")]
+public class PluginBT
 {
     /// <summary>
     /// id

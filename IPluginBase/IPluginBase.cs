@@ -3,7 +3,6 @@ using UnifyBot.Receiver.EventReceiver;
 using UnifyBot.Receiver.MessageReceiver;
 using FluentScheduler;
 using SqlSugar;
-using System.Reflection;
 using UnifyBot.Message.Chain;
 using UnifyBot;
 
@@ -12,10 +11,7 @@ namespace PluginBase;
 /// <summary>
 /// 插件父类
 /// </summary>
-/// <param name="name">插件名</param>
-/// <param name="version">插件版本</param>
-/// <param name="desc">插件描述</param>
-public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposable
+public abstract class IPluginBase : IDisposable
 {
     private bool disposedValue;
 
@@ -44,24 +40,23 @@ public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposabl
     public abstract string Useage { get; set; }
 
     private string _jobName = "";
-    public string? JobName => _jobName;
+    public string JobName => _jobName;
 
     private string? _confPath = null;
-
-    private Lazy<SqlSugarClient> _db => new(() => InitSqlSugar(dbSource));
 
     /// <summary>
     /// 数据库上下文
     /// </summary>
-    internal SqlSugarClient Db => _db.Value;
+    private SqlSugarClient? Db { get; set; }
 
     /// <summary>
     /// 获取插件所有配置
     /// </summary>
     /// <returns></returns>
-    public async Task<List<Config>> GetConfig()
+    public async Task<List<ConfigBT>> GetConfig()
     {
-        var data = await Db.Queryable<Config>().Where(x => x.PluginId == PluginId).ToListAsync();
+        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
+        var data = await Db.Queryable<ConfigBT>().Where(x => x.PluginId == PluginId).ToListAsync();
         return data;
     }
 
@@ -72,7 +67,8 @@ public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposabl
     /// <returns></returns>
     public async Task<string> GetConfig(string key)
     {
-        var data = await Db.Queryable<Config>().FirstAsync(x => x.PluginId == PluginId && x.Key == key);
+        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
+        var data = await Db.Queryable<ConfigBT>().FirstAsync(x => x.PluginId == PluginId && x.Key == key);
         return data?.Value ?? "";
     }
 
@@ -83,7 +79,8 @@ public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposabl
     /// <returns></returns>
     public async Task<bool> HasKey(string key)
     {
-        return await Db.Queryable<Config>().AnyAsync(x => x.PluginId == PluginId && x.Key == key);
+        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
+        return await Db.Queryable<ConfigBT>().AnyAsync(x => x.PluginId == PluginId && x.Key == key);
     }
 
     /// <summary>
@@ -94,7 +91,8 @@ public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposabl
     /// <returns></returns>
     public async Task<bool> SaveConfig(int id, string value)
     {
-        var res = await Db.Updateable<Config>().SetColumns(x => x.Value == value).Where(x => x.Id == id).ExecuteCommandAsync();
+        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
+        var res = await Db.Updateable<ConfigBT>().SetColumns(x => x.Value == value).Where(x => x.Id == id).ExecuteCommandAsync();
         return res > 0;
     }
 
@@ -106,9 +104,10 @@ public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposabl
     /// <returns></returns>
     public async Task<bool> SaveConfig(string key, string value)
     {
+        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
         if (!await HasKey(key))
         {
-            var config = new Config
+            var config = new ConfigBT
             {
                 Key = key,
                 Value = value,
@@ -119,7 +118,7 @@ public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposabl
         }
         else
         {
-            var res = await Db.Updateable<Config>().SetColumns(x => x.Value == value).Where(x => x.PluginId == PluginId && x.Key == key).ExecuteCommandAsync();
+            var res = await Db.Updateable<ConfigBT>().SetColumns(x => x.Value == value).Where(x => x.PluginId == PluginId && x.Key == key).ExecuteCommandAsync();
             return res > 0;
         }
     }
@@ -129,8 +128,9 @@ public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposabl
     /// </summary>
     /// <param name="config">配置</param>
     /// <returns></returns>
-    public async Task<bool> SaveConfig(Config config)
+    public async Task<bool> SaveConfig(ConfigBT config)
     {
+        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
         if (!await HasKey(config.Key))
         {
             config.PluginId = PluginId;
@@ -150,7 +150,8 @@ public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposabl
     /// <returns></returns>
     public async Task<bool> RemoveConfig()
     {
-        return await Db.Deleteable<Config>(GetConfig()).ExecuteCommandAsync() > 0;
+        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
+        return await Db.Deleteable<ConfigBT>(GetConfig()).ExecuteCommandAsync() > 0;
     }
 
     /// <summary>
@@ -160,7 +161,8 @@ public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposabl
     /// <returns></returns>
     public async Task<bool> RemoveConfig(string key)
     {
-        return await Db.Deleteable<Config>(await GetConfig(key)).ExecuteCommandAsync() > 0;
+        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
+        return await Db.Deleteable<ConfigBT>(await GetConfig(key)).ExecuteCommandAsync() > 0;
     }
 
     /// <summary>
@@ -355,32 +357,5 @@ public abstract class IPluginBase(string dbSource = "data/main.db") : IDisposabl
         // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
-    }
-
-    private static SqlSugarClient InitSqlSugar(string dbSource)
-    {
-        var master = "Data Source=" + dbSource;
-        ConnectionConfig config = new()
-        {
-            ConnectionString = master,
-            DbType = DbType.Sqlite,
-            IsAutoCloseConnection = true,
-            ConfigureExternalServices = new()
-            {
-                //注意:  这儿AOP设置不能少
-                EntityService = (c, p) =>
-                {
-                    if (p.IsPrimarykey == false && new NullabilityInfoContext()
-                     .Create(c).WriteState is NullabilityState.Nullable)
-                    {
-                        p.IsNullable = true;
-                    }
-                }
-            }
-        };
-        SqlSugarClient sqlSugarClient = new(config);
-        sqlSugarClient.CodeFirst.InitTables<Plugin>();
-        sqlSugarClient.CodeFirst.InitTables<Config>();
-        return sqlSugarClient;
     }
 }

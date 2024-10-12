@@ -1,21 +1,48 @@
 ﻿using PluginBase;
+using SqlSugar;
+using System.Reflection;
 using UnifyBot.Model;
 
 namespace Test;
 
 internal class Program
 {
-   async static Task Main(string[] args)
+    async static Task Main(string[] args)
     {
         var conn = new Connect("localhost", 3001, 3000);
         UnifyBot.Bot bot = new(conn);
         await bot.StartAsync();
         Console.WriteLine("QQ机器人服务连接成功");
-        PluginRegister.LoadPlugins(bot);
+        PluginRegister.LoadPlugins(InitDb(), bot);
         PluginRegister.FriendControlPlugin();
         while (true)
         {
             Thread.Sleep(1);
         }
+    }
+
+    static SqlSugarClient InitDb()
+    {
+        var master = "Data Source=data/main.db";
+        ConnectionConfig config = new()
+        {
+            ConnectionString = master,
+            DbType = DbType.Sqlite,
+            IsAutoCloseConnection = true,
+            ConfigureExternalServices = new()
+            {
+                //注意:  这儿AOP设置不能少
+                EntityService = (c, p) =>
+                {
+                    if (p.IsPrimarykey == false && new NullabilityInfoContext()
+                     .Create(c).WriteState is NullabilityState.Nullable)
+                    {
+                        p.IsNullable = true;
+                    }
+                }
+            }
+        };
+        SqlSugarClient sqlSugarClient = new(config);
+        return sqlSugarClient;
     }
 }
