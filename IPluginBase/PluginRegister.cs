@@ -95,6 +95,10 @@ public class PluginRegister
                 temp = Plugins.FirstOrDefault(x => x.Name == instance.Name && x.Version == instance.Version)!;
                 instance.PluginId = temp.Id;
             }
+            if (!temp.Enable)
+            {
+                JobManager.GetSchedule(instance.JobName)?.Disable();
+            }
             if (!LoadedPlugins.Any(x => x.Key.Name == instance.Name && x.Key.Version == instance.Version))
                 LoadedPlugins.Add(temp, instance);
             if (bot != null) ExcutePlugin(bot);

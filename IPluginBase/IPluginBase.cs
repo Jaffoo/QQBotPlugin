@@ -202,8 +202,8 @@ public abstract class IPluginBase : IDisposable
     public void SetTimer(string jobName, Action job, Action<Schedule> schedule)
     {
         _jobName = jobName;
-        JobManager.RemoveJob(jobName);
-        JobManager.AddJob(job, schedule);
+        if (JobManager.GetSchedule(JobName) == null)
+            JobManager.AddJob(job, schedule);
     }
 
     /// <summary>
