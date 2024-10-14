@@ -1,7 +1,6 @@
 ﻿using ConsoleTables;
 using FluentScheduler;
 using SqlSugar;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reflection;
 using TBC.CommonLib;
@@ -18,15 +17,8 @@ namespace PluginBase;
 public class PluginRegister
 {
     private static bool _initTimer = false;
-    private static SqlSugarClient? _db;
-    private static SqlSugarClient Db
-    {
-        get
-        {
-            _db!.Open();
-            return _db;
-        }
-    }
+    private static ConnectionConfig _connConfig = new();
+    private static SqlSugarClient Db => new(_connConfig);
     private static readonly Dictionary<PluginBT, IPluginBase> LoadedPlugins = [];
     private static Bot? _bot;
 
@@ -50,8 +42,7 @@ public class PluginRegister
             _initTimer = true;
         }
         _bot = bot;
-        _db = db;
-        _db.CurrentConnectionConfig.IsAutoCloseConnection = false;
+        _connConfig = db.CurrentConnectionConfig.DeepClone();
         if (!Directory.Exists("plugins")) Directory.CreateDirectory("plugins");
         var files = new DirectoryInfo("plugins").GetFiles();
         foreach (var item in files)
