@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="TBC.CommonLib" Version="1.1.4.4" />
     <PackageReference Include="UnifyBot" Version="1.2.2.1" />
   </ItemGroup>
 

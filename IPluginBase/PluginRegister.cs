@@ -17,8 +17,18 @@ namespace PluginBase;
 public class PluginRegister
 {
     private static bool _initTimer = false;
-    private static ConnectionConfig _connConfig = new();
-    private static SqlSugarClient Db => new(_connConfig);
+    private static ConnectionConfig? _connConfig = null;
+    private static SqlSugarClient Db
+    {
+        get
+        {
+            while (_connConfig == null)
+            {
+                Thread.Sleep(10);
+            }
+            return new(_connConfig);
+        }
+    }
     private static readonly Dictionary<PluginBT, IPluginBase> LoadedPlugins = [];
     private static Bot? _bot;
 
@@ -226,7 +236,7 @@ public class PluginRegister
     {
         JobManager.Initialize();
         JobManager.RemoveAllJobs();
-        JobManager.AddJob(() => LoadPlugins(Db!, _bot), x => x.WithName("AutoLoadPlugins").ToRunNow().AndEvery(10).Minutes());
+        JobManager.AddJob(() => LoadPlugins(Db!, _bot), x => x.WithName("AutoLoadPlugins").ToRunEvery(10).Minutes());
     }
 
     /// <summary>
