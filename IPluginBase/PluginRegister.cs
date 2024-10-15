@@ -68,6 +68,13 @@ namespace IPluginBase
             if (_connConfig == null) throw new Exception("请先调用InitPlugin方法");
         }
 
+        public void InitPlugin(bool rewriteTable = false)
+        {
+            AutoLoadPlugin();
+            LoadPlugins();
+            if (!rewriteTable) InitTable();
+        }
+
         public void InitPlugin(SqlSugarClient db, bool rewriteTable = false)
         {
             _connConfig = db.CurrentConnectionConfig.DeepClone();
