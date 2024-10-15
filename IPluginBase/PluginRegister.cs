@@ -65,24 +65,24 @@ public class PluginRegister
 
     public void InitPlugin(SqlSugarClient db, bool rewriteTable = false)
     {
-        if (!rewriteTable) InitTable();
         LoadPlugins(db.CurrentConnectionConfig);
+        if (!rewriteTable) InitTable();
     }
     public void InitPlugin(SqlSugarClient db, Bot bot, bool rewriteTable = false)
     {
-        if (!rewriteTable) InitTable();
         LoadPlugins(db.CurrentConnectionConfig, bot);
+        if (!rewriteTable) InitTable();
     }
 
     public void InitPlugin(ConnectionConfig conn, bool rewriteTable = false)
     {
-        if (!rewriteTable) InitTable();
         LoadPlugins(conn);
+        if (!rewriteTable) InitTable();
     }
     public void InitPlugin(ConnectionConfig conn, Bot bot, bool rewriteTable = false)
     {
-        if (!rewriteTable) InitTable();
         LoadPlugins(conn, bot);
+        if (!rewriteTable) InitTable();
     }
 
     /// <summary>
