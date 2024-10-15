@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.IO;
 
-namespace PluginBase
+namespace IPluginBase
 {
 
     /// <summary>
     /// 插件父类
     /// </summary>
-    public abstract class IPluginBase : IDisposable
+    public abstract class PluginBase : IDisposable
     {
         private bool disposedValue;
 

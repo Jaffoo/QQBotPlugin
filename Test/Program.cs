@@ -1,4 +1,4 @@
-﻿using PluginBase;
+﻿using IPluginBase;
 using SqlSugar;
 using System.Reflection;
 using UnifyBot.Model;

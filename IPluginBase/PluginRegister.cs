@@ -13,7 +13,7 @@ using UnifyBot;
 using UnifyBot.Receiver.EventReceiver;
 using UnifyBot.Receiver.MessageReceiver;
 
-namespace PluginBase
+namespace IPluginBase
 {
 
     /// <summary>
@@ -46,7 +46,7 @@ namespace PluginBase
                 return new SqlSugarClient(_connConfig);
             }
         }
-        private readonly Dictionary<PluginBT, IPluginBase> LoadedPlugins = new Dictionary<PluginBT, IPluginBase>();
+        private readonly Dictionary<PluginBT, PluginBase> LoadedPlugins = new Dictionary<PluginBT, PluginBase>();
         private Bot? _bot;
 
         public List<PluginBT> Plugins
@@ -119,7 +119,7 @@ namespace PluginBase
                 if (type == null) continue;
                 var instanceObj = Activator.CreateInstance(type);
                 // 获取私有属性的 PropertyInfo
-                var pFields = typeof(IPluginBase).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+                var pFields = typeof(PluginBase).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
                 // 检查属性信息是否为 null
                 if (pFields != null)
                 {
@@ -131,7 +131,7 @@ namespace PluginBase
                     var pConn = pFields.FirstOrDefault(x => x.Name.Contains("_config"));
                     pConn?.SetValue(instanceObj, _connConfig);
                 }
-                using IPluginBase? instance = instanceObj as IPluginBase;
+                using PluginBase? instance = instanceObj as PluginBase;
                 if (instance == null) continue;
                 PluginBT temp;
                 if (!Plugins.Exists(t => t.Name == instance.Name && t.Version == instance.Version))

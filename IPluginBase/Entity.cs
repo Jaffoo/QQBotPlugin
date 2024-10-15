@@ -1,6 +1,6 @@
 ﻿using SqlSugar;
 
-namespace PluginBase
+namespace IPluginBase
 {
 
     /// <summary>
