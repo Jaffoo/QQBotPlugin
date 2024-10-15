@@ -3,13 +3,20 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
-    <Version>0.0.8.2</Version>
+    <Version>0.0.9</Version>
     <Authors>Jaffoo</Authors>
     <Company>none</Company>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/Jaffoo/QQBotPlugin</RepositoryUrl>
     <PackageProjectUrl>https://github.com/Jaffoo/QQBotPlugin</PackageProjectUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="ConsoleTables" Version="2.6.2" />

@@ -36,7 +36,6 @@ namespace IPluginBase
             }
         }
 
-        private bool _initTimer = false;
         private ConnectionConfig? _connConfig = null;
         private SqlSugarClient Db
         {
@@ -71,40 +70,43 @@ namespace IPluginBase
 
         public void InitPlugin(SqlSugarClient db, bool rewriteTable = false)
         {
-            LoadPlugins(db.CurrentConnectionConfig);
+            _connConfig = db.CurrentConnectionConfig.DeepClone();
+            AutoLoadPlugin();
+            LoadPlugins();
             if (!rewriteTable) InitTable();
         }
         public void InitPlugin(SqlSugarClient db, Bot bot, bool rewriteTable = false)
         {
-            LoadPlugins(db.CurrentConnectionConfig, bot);
+            _bot = bot;
+            _connConfig = db.CurrentConnectionConfig.DeepClone();
+            AutoLoadPlugin();
+            ExcutePlugin(bot);
+            LoadPlugins();
             if (!rewriteTable) InitTable();
         }
 
         public void InitPlugin(ConnectionConfig conn, bool rewriteTable = false)
         {
-            LoadPlugins(conn);
+            _connConfig = conn.DeepClone();
+            AutoLoadPlugin();
+            LoadPlugins();
             if (!rewriteTable) InitTable();
         }
         public void InitPlugin(ConnectionConfig conn, Bot bot, bool rewriteTable = false)
         {
-            LoadPlugins(conn, bot);
+            _bot = bot;
+            _connConfig = conn.DeepClone();
+            AutoLoadPlugin();
+            ExcutePlugin(bot);
+            LoadPlugins();
             if (!rewriteTable) InitTable();
         }
 
         /// <summary>
         /// 加载插件
         /// </summary>
-        private void LoadPlugins(ConnectionConfig conn, Bot? bot = null)
+        private void LoadPlugins()
         {
-            _bot = bot;
-            _connConfig = conn.DeepClone();
-            InitTable();
-            if (!_initTimer)
-            {
-                AutoLoadPlugin();
-                _initTimer = true;
-            }
-
             if (!Directory.Exists("plugins")) Directory.CreateDirectory("plugins");
             var files = new DirectoryInfo("plugins").GetFiles();
             foreach (var item in files)
@@ -126,7 +128,7 @@ namespace IPluginBase
                     if (_bot != null)
                     {
                         var pBot = pFields.FirstOrDefault(x => x.Name.Contains("_bot"));
-                        pBot?.SetValue(instanceObj, bot);
+                        pBot?.SetValue(instanceObj, _bot);
                     }
                     var pConn = pFields.FirstOrDefault(x => x.Name.Contains("_config"));
                     pConn?.SetValue(instanceObj, _connConfig);
@@ -160,7 +162,6 @@ namespace IPluginBase
                 if (!LoadedPlugins.Any(x => x.Key.Name == instance.Name && x.Key.Version == instance.Version))
                     LoadedPlugins.Add(temp, instance);
             }
-            if (bot != null) ExcutePlugin(bot);
         }
 
         /// <summary>
@@ -210,7 +211,7 @@ namespace IPluginBase
             CheckInit();
             Plugins.Clear();
             LoadedPlugins.Clear();
-            LoadPlugins(_connConfig!, _bot);
+            LoadPlugins();
         }
 
         /// <summary>
@@ -299,7 +300,7 @@ namespace IPluginBase
             CheckInit();
             JobManager.Initialize();
             JobManager.RemoveAllJobs();
-            JobManager.AddJob(() => LoadPlugins(_connConfig!, _bot), x => x.WithName("AutoLoadPlugins").ToRunEvery(10).Minutes());
+            JobManager.AddJob(() => LoadPlugins(), x => x.WithName("AutoLoadPlugins").ToRunEvery(10).Minutes());
         }
 
         /// <summary>
