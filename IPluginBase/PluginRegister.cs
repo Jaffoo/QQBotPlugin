@@ -16,43 +16,89 @@ namespace PluginBase;
 /// <typeparam name="T">插件表</typeparam>
 public class PluginRegister
 {
-    private static bool _initTimer = false;
-    private static ConnectionConfig? _connConfig = null;
-    private static SqlSugarClient Db
+    private PluginRegister() { }
+    private static PluginRegister? _instance;
+    private static readonly object _lock = new();
+    public static PluginRegister Instance
     {
         get
         {
-            while (_connConfig == null)
-            {
-                Thread.Sleep(10);
-            }
+            if (_instance == null)
+                lock (_lock)
+                    _instance ??= new PluginRegister();
+            return _instance;
+        }
+    }
+
+    private bool _initTimer = false;
+    private ConnectionConfig? _connConfig = null;
+    private SqlSugarClient Db
+    {
+        get
+        {
+            CheckInit();
             return new(_connConfig);
         }
     }
-    private static readonly Dictionary<PluginBT, IPluginBase> LoadedPlugins = [];
-    private static Bot? _bot;
+    private readonly Dictionary<PluginBT, IPluginBase> LoadedPlugins = [];
+    private Bot? _bot;
 
-    public static List<PluginBT> Plugins
+    public List<PluginBT> Plugins
     {
         get
         {
-            if (Db == null) return [];
+            CheckInit();
             return Db.Queryable<PluginBT>().ToList();
         }
+    }
+
+    private void InitTable()
+    {
+        Db.CodeFirst.InitTables<ConfigBT>();
+        Db.CodeFirst.InitTables<PluginBT>();
+    }
+
+    private void CheckInit()
+    {
+        if (_connConfig == null) throw new Exception("请先调用InitPlugin方法");
+    }
+
+    public void InitPlugin(SqlSugarClient db, bool rewriteTable = false)
+    {
+        if (!rewriteTable) InitTable();
+        LoadPlugins(db.CurrentConnectionConfig);
+    }
+    public void InitPlugin(SqlSugarClient db, Bot bot, bool rewriteTable = false)
+    {
+        if (!rewriteTable) InitTable();
+        LoadPlugins(db.CurrentConnectionConfig, bot);
+    }
+
+    public void InitPlugin(ConnectionConfig conn, bool rewriteTable = false)
+    {
+        if (!rewriteTable) InitTable();
+        LoadPlugins(conn);
+    }
+    public void InitPlugin(ConnectionConfig conn, Bot bot, bool rewriteTable = false)
+    {
+        if (!rewriteTable) InitTable();
+        LoadPlugins(conn, bot);
     }
 
     /// <summary>
     /// 加载插件
     /// </summary>
-    public static void LoadPlugins(SqlSugarClient db, Bot? bot = null)
+    private void LoadPlugins(ConnectionConfig conn, Bot? bot = null)
     {
+        _bot = bot;
+        _connConfig = conn.DeepClone();
+        InitTable();
         if (!_initTimer)
         {
             AutoLoadPlugin();
             _initTimer = true;
         }
-        _bot = bot;
-        _connConfig = db.CurrentConnectionConfig.DeepClone();
+
         if (!Directory.Exists("plugins")) Directory.CreateDirectory("plugins");
         var files = new DirectoryInfo("plugins").GetFiles();
         foreach (var item in files)
@@ -71,8 +117,13 @@ public class PluginRegister
             // 检查属性信息是否为 null
             if (pFields != null)
             {
-                var pBot = pFields.FirstOrDefault(x => x.Name.Contains("_bot"));
-                pBot?.SetValue(instanceObj, bot);
+                if (_bot != null)
+                {
+                    var pBot = pFields.FirstOrDefault(x => x.Name.Contains("_bot"));
+                    pBot?.SetValue(instanceObj, bot);
+                }
+                var pConn = pFields.FirstOrDefault(x => x.Name.Contains("_config"));
+                pConn?.SetValue(instanceObj, _connConfig);
             }
             using IPluginBase? instance = instanceObj as IPluginBase;
             if (instance == null) continue;
@@ -111,7 +162,7 @@ public class PluginRegister
     /// 默认全部好友，如果传参qqs，则是特定人能使用
     /// </summary>
     /// <param name="qqs"></param>
-    public static void FriendControlPlugin(List<long>? qqs = null)
+    public void FriendControlPlugin(List<long>? qqs = null)
     {
         if (_bot == null) throw new MissingFieldException("如果使用了qq机器人，请在加载插件的方法中传入机器人对象");
         _bot.MessageReceived.OfType<PrivateReceiver>().Subscribe(async x =>
@@ -130,7 +181,7 @@ public class PluginRegister
     /// 默认全部群，如果传参groups，则是特定群能使用
     /// </summary>
     /// <param name="groups"></param>
-    public static void GroupControlPlugin(List<long>? groups = null)
+    public void GroupControlPlugin(List<long>? groups = null)
     {
         if (_bot == null) throw new MissingFieldException("如果使用了qq机器人，请在加载插件的方法中传入机器人对象");
         _bot.MessageReceived.OfType<GroupReceiver>().Subscribe(async x =>
@@ -147,21 +198,23 @@ public class PluginRegister
     /// <summary>
     /// 重载插件
     /// </summary>
-    public static void ReLoadPlugins(Bot? bot = null)
+    public void ReLoadPlugins()
     {
+        CheckInit();
         Plugins.Clear();
         LoadedPlugins.Clear();
-        LoadPlugins(Db!, bot);
+        LoadPlugins(_connConfig!, _bot);
     }
 
     /// <summary>
     /// 禁用插件
     /// </summary>
-    public static void StopPlugin(long id)
+    public void StopPlugin(long id)
     {
+        CheckInit();
         var plugin = Plugins.FirstOrDefault(t => t.Id == id) ?? throw new Exception("插件不存在");
         plugin.Enable = false;
-        var b = Db!.Updateable(plugin).ExecuteCommand() > 0;
+        var b = Db.Updateable(plugin).ExecuteCommand() > 0;
         if (b)
         {
             var load = LoadedPlugins.FirstOrDefault(x => x.Key.Id == id);
@@ -174,8 +227,9 @@ public class PluginRegister
     /// <summary>
     /// 启用插件
     /// </summary>
-    public static void StartPlugin(long id)
+    public void StartPlugin(long id)
     {
+        CheckInit();
         var plugin = Plugins.FirstOrDefault(t => t.Id == id) ?? throw new Exception("插件不存在");
         var list = Plugins.Where(x => x.Name == plugin.Name).ToList();
         list.ForEach(x =>
@@ -184,7 +238,7 @@ public class PluginRegister
             else x.Enable = false;
         });
 
-        var b = Db!.Updateable(list).ExecuteCommand() > 0;
+        var b = Db.Updateable(list).ExecuteCommand() > 0;
         if (b)
         {
             var load = LoadedPlugins.FirstOrDefault(x => x.Key.Id == id);
@@ -197,9 +251,10 @@ public class PluginRegister
     /// <summary>
     /// 删除插件
     /// </summary>
-    public static void DelPlugin(long id)
+    public void DelPlugin(long id)
     {
-        var b = Db!.Deleteable<PluginBT>().In(id).ExecuteCommand() > 0;
+        CheckInit();
+        var b = Db.Deleteable<PluginBT>().In(id).ExecuteCommand() > 0;
         if (b)
         {
             Db.Deleteable<ConfigBT>(x => x.PluginId == id).ExecuteCommand();
@@ -220,7 +275,7 @@ public class PluginRegister
     /// <summary>
     /// 调用插件
     /// </summary>
-    private static async Task Excute(MessageReceiver? mrb = null, EventReceiver? eb = null, string unKnow = "")
+    private async Task Excute(MessageReceiver? mrb = null, EventReceiver? eb = null, string unKnow = "")
     {
         foreach (var item in LoadedPlugins)
         {
@@ -232,18 +287,19 @@ public class PluginRegister
     /// <summary>
     /// 启用自动同步插件定时任务
     /// </summary>
-    private static void AutoLoadPlugin()
+    private void AutoLoadPlugin()
     {
+        CheckInit();
         JobManager.Initialize();
         JobManager.RemoveAllJobs();
-        JobManager.AddJob(() => LoadPlugins(Db!, _bot), x => x.WithName("AutoLoadPlugins").ToRunEvery(10).Minutes());
+        JobManager.AddJob(() => LoadPlugins(_connConfig!, _bot), x => x.WithName("AutoLoadPlugins").ToRunEvery(10).Minutes());
     }
 
     /// <summary>
     /// 执行插件
     /// </summary>
     /// <param name="bot"></param>
-    private static void ExcutePlugin(Bot bot)
+    private void ExcutePlugin(Bot bot)
     {
         bot.MessageReceived.Subscribe(async x => await Excute(x));
 
@@ -257,11 +313,11 @@ public class PluginRegister
     /// </summary>
     /// <param name="text"></param>
     /// <returns></returns>
-    private static string Handle(string text)
+    private string Handle(string text)
     {
         if (text == "加载插件")
         {
-            ReLoadPlugins(_bot);
+            ReLoadPlugins();
             return "插件已更新";
         }
 
@@ -338,7 +394,7 @@ public class PluginRegister
         return "";
     }
 
-    private static string CreatePluginTable(List<PluginBT> plugins)
+    private string CreatePluginTable(List<PluginBT> plugins)
     {
         var table = new ConsoleTable("标识", "插件名", "版本", "状态");
         foreach (var plugin in plugins)
@@ -347,7 +403,7 @@ public class PluginRegister
         }
         return table.ToString();
     }
-    private static string CreateTimerTable(List<Schedule> timers)
+    private string CreateTimerTable(List<Schedule> timers)
     {
         var table = new ConsoleTable("名称", "状态", "下次运行");
         foreach (var timer in timers)

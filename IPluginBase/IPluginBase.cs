@@ -44,10 +44,18 @@ public abstract class IPluginBase : IDisposable
 
     private string? _confPath = null;
 
+    private ConnectionConfig? _config { get; set; }
     /// <summary>
     /// 数据库上下文
     /// </summary>
-    private SqlSugarClient? Db { get; set; }
+    private SqlSugarClient Db
+    {
+        get
+        {
+            if (_config == null) throw new Exception("连接数据库失败");
+            return new(_config);
+        }
+    }
 
     /// <summary>
     /// 获取插件所有配置
@@ -55,7 +63,6 @@ public abstract class IPluginBase : IDisposable
     /// <returns></returns>
     public async Task<List<ConfigBT>> GetConfig()
     {
-        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
         var data = await Db.Queryable<ConfigBT>().Where(x => x.PluginId == PluginId).ToListAsync();
         return data;
     }
@@ -67,7 +74,6 @@ public abstract class IPluginBase : IDisposable
     /// <returns></returns>
     public async Task<string> GetConfig(string key)
     {
-        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
         var data = await Db.Queryable<ConfigBT>().FirstAsync(x => x.PluginId == PluginId && x.Key == key);
         return data?.Value ?? "";
     }
@@ -79,7 +85,6 @@ public abstract class IPluginBase : IDisposable
     /// <returns></returns>
     public async Task<bool> HasKey(string key)
     {
-        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
         return await Db.Queryable<ConfigBT>().AnyAsync(x => x.PluginId == PluginId && x.Key == key);
     }
 
@@ -91,7 +96,6 @@ public abstract class IPluginBase : IDisposable
     /// <returns></returns>
     public async Task<bool> SaveConfig(int id, string value)
     {
-        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
         var res = await Db.Updateable<ConfigBT>().SetColumns(x => x.Value == value).Where(x => x.Id == id).ExecuteCommandAsync();
         return res > 0;
     }
@@ -104,7 +108,6 @@ public abstract class IPluginBase : IDisposable
     /// <returns></returns>
     public async Task<bool> SaveConfig(string key, string value)
     {
-        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
         if (!await HasKey(key))
         {
             var config = new ConfigBT
@@ -130,7 +133,6 @@ public abstract class IPluginBase : IDisposable
     /// <returns></returns>
     public async Task<bool> SaveConfig(ConfigBT config)
     {
-        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
         if (!await HasKey(config.Key))
         {
             config.PluginId = PluginId;
@@ -150,7 +152,6 @@ public abstract class IPluginBase : IDisposable
     /// <returns></returns>
     public async Task<bool> RemoveConfig()
     {
-        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
         return await Db.Deleteable<ConfigBT>(GetConfig()).ExecuteCommandAsync() > 0;
     }
 
@@ -161,7 +162,6 @@ public abstract class IPluginBase : IDisposable
     /// <returns></returns>
     public async Task<bool> RemoveConfig(string key)
     {
-        if (Db == null) throw new MissingFieldException("无效的数据库上下文");
         return await Db.Deleteable<ConfigBT>(await GetConfig(key)).ExecuteCommandAsync() > 0;
     }
 
