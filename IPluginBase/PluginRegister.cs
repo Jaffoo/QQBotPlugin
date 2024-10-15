@@ -153,8 +153,8 @@ public class PluginRegister
             }
             if (!LoadedPlugins.Any(x => x.Key.Name == instance.Name && x.Key.Version == instance.Version))
                 LoadedPlugins.Add(temp, instance);
-            if (bot != null) ExcutePlugin(bot);
         }
+        if (bot != null) ExcutePlugin(bot);
     }
 
     /// <summary>
