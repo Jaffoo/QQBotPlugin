@@ -3,7 +3,7 @@
 
 ### 使用方法
 
-安装：自行打包
+安装：[nuget包](https://github.com/Jaffoo/QQBotPlugin/tree/master/IPluginBase/bin/Debug)(本地打包好的，未上传到微软)
 
 PluginRegister.Instance.InitPlugin(db,bot) //db是sqlsugar的数据库上下文，bot是unifybot的对象；存在重载，自行查看；必须首先调用
 
