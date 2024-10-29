@@ -114,7 +114,7 @@ namespace IPluginBase
         /// </summary>
         private void LoadPlugins()
         {
-            List<PluginBase> list = new List<PluginBase>();
+            List<PluginBT> list = new List<PluginBT>();
             if (!Directory.Exists("plugins")) Directory.CreateDirectory("plugins");
             var files = new DirectoryInfo("plugins").GetFiles();
             foreach (var item in files)
@@ -143,7 +143,6 @@ namespace IPluginBase
                 }
                 using PluginBase? instance = instanceObj as PluginBase;
                 if (instance == null) continue;
-                list.Add(instance);
                 PluginBT temp;
                 if (!Plugins.Exists(t => t.Name == instance.Name && t.Version == instance.Version))
                 {
@@ -170,6 +169,7 @@ namespace IPluginBase
                 }
                 if (!LoadedPlugins.Any(x => x.Key.Name == instance.Name && x.Key.Version == instance.Version))
                     LoadedPlugins.Add(temp, instance);
+                list.Add(temp);
             }
             if (list.Count != Plugins.Count)
                 DeleteNotExist(list);
@@ -439,11 +439,9 @@ namespace IPluginBase
             return table.ToString();
         }
 
-        private void DeleteNotExist(List<PluginBase> list)
+        private void DeleteNotExist(List<PluginBT> list)
         {
-            var pluginsToRemove = Plugins
-            .Where(plugin => list.Any(model => model.Name != plugin.Name && model.Version != plugin.Version))
-            .ToList();
+            var pluginsToRemove = Plugins.Except(list).ToList();
             Db.Deleteable(pluginsToRemove).ExecuteCommand();
         }
     }
