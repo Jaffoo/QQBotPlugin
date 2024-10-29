@@ -227,6 +227,29 @@ namespace IPluginBase
         }
 
         /// <summary>
+        /// 停用所有插件
+        /// </summary>
+        public void StopAllPlugin()
+        {
+            CheckInit();
+            var plugins = Plugins.DeepClone();
+            plugins.ForEach(x => x.Enable = false);
+            var b = Db.Updateable(plugins).ExecuteCommand() > 0;
+            if (b)
+            {
+                foreach (var item in LoadedPlugins.Keys)
+                {
+                    item.Enable = false;
+                    var model = LoadedPlugins[item];
+                    if (!model.JobName.IsNullOrWhiteSpace())
+                    {
+                        JobManager.GetSchedule(model.JobName).Disable();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// 禁用插件
         /// </summary>
         public void StopPlugin(long id)
@@ -241,6 +264,29 @@ namespace IPluginBase
                 load.Key.Enable = false;
                 if (!load.Value.JobName.IsNullOrWhiteSpace())
                     JobManager.GetSchedule(load.Value.JobName).Disable();
+            }
+        }
+
+        /// <summary>
+        /// 启用全部插件
+        /// </summary>
+        public void StartAllPlugin()
+        {
+            CheckInit();
+            var list = Plugins.DeepClone();
+            list.ForEach(x => x.Enable = true);
+            var b = Db.Updateable(list).ExecuteCommand() > 0;
+            if (b)
+            {
+                foreach (var item in LoadedPlugins.Keys)
+                {
+                    item.Enable = true;
+                    var model = LoadedPlugins[item];
+                    if (!model.JobName.IsNullOrWhiteSpace())
+                    {
+                        JobManager.GetSchedule(model.JobName).Enable();
+                    }
+                }
             }
         }
 
@@ -370,10 +416,20 @@ namespace IPluginBase
                 StartPlugin(id);
                 return "插件已启用";
             }
+            if (text[..4] == "启用全部")
+            {
+                StartAllPlugin();
+                return "插件已启用";
+            }
             if (text.Length > 4 && text[..4] == "禁用插件")
             {
                 var id = text[4..].ToInt(0);
                 StopPlugin(id);
+                return "插件已禁用";
+            }
+            if (text[..4] == "禁用全部")
+            {
+                StopAllPlugin();
                 return "插件已禁用";
             }
             if (text.Length > 4 && text[..4] == "删除插件")
