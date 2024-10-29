@@ -53,5 +53,5 @@ PluginRegister.Instance.GroupControlPlugin() //好友通过命令控制插件，
 写好后，直接生成，找到对应的dll，放到插件目录（程序根目录/plugins）文件夹中，
 然后使用命令【加载插件】重新加载，或者重启你的程序，或者等待（插件自动注册了一个重新加载插件的定时任务，每10分钟执行一次）
 
-### 导航
+### 分享
 我自己写好的插件库分享：[导航](https://github.com/Jaffoo/Plugins)
