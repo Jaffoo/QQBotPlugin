@@ -497,7 +497,7 @@ namespace IPluginBase
 
         private void DeleteNotExist(List<PluginBT> list)
         {
-            var pluginsToRemove = Plugins.Except(list).ToList();
+            var pluginsToRemove = Plugins.Where(p => !list.Any(l => l.Name == p.Name && l.Version == p.Version)).ToList();
             Db.Deleteable(pluginsToRemove).ExecuteCommand();
         }
     }
