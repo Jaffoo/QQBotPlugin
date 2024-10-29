@@ -114,6 +114,7 @@ namespace IPluginBase
         /// </summary>
         private void LoadPlugins()
         {
+            List<PluginBase> list = new List<PluginBase>();
             if (!Directory.Exists("plugins")) Directory.CreateDirectory("plugins");
             var files = new DirectoryInfo("plugins").GetFiles();
             foreach (var item in files)
@@ -142,6 +143,7 @@ namespace IPluginBase
                 }
                 using PluginBase? instance = instanceObj as PluginBase;
                 if (instance == null) continue;
+                list.Add(instance);
                 PluginBT temp;
                 if (!Plugins.Exists(t => t.Name == instance.Name && t.Version == instance.Version))
                 {
@@ -169,7 +171,10 @@ namespace IPluginBase
                 if (!LoadedPlugins.Any(x => x.Key.Name == instance.Name && x.Key.Version == instance.Version))
                     LoadedPlugins.Add(temp, instance);
             }
+            if (list.Count != Plugins.Count)
+                DeleteNotExist(list);
         }
+
 
         /// <summary>
         /// 启用通过命令操作插件（也可以自己实现）
@@ -256,10 +261,16 @@ namespace IPluginBase
             var b = Db.Updateable(list).ExecuteCommand() > 0;
             if (b)
             {
-                var load = LoadedPlugins.FirstOrDefault(x => x.Key.Id == id);
-                load.Key.Enable = true;
-                if (!load.Value.JobName.IsNullOrWhiteSpace())
-                    JobManager.GetSchedule(load.Value.JobName).Enable();
+                var loads = LoadedPlugins.Where(x => x.Key.Name == plugin.Name).ToList();
+                loads.ForEach(x =>
+                {
+                    if (x.Key.Id == id) x.Key.Enable = true;
+                    else x.Key.Enable = false;
+                });
+                if (loads.Count > 1)
+                    ReLoadPlugins();
+                else if (loads.Count == 1 && !loads[0].Value.JobName.IsNullOrWhiteSpace())
+                    JobManager.GetSchedule(loads[0].Value.JobName).Enable();
             }
         }
 
@@ -426,6 +437,14 @@ namespace IPluginBase
                 table.AddRow(timer.Name, timer.Disabled ? "禁用" : "启用", timer.NextRun.ToString("yyyy/MM/dd HH:mm:ss"));
             }
             return table.ToString();
+        }
+
+        private void DeleteNotExist(List<PluginBase> list)
+        {
+            var pluginsToRemove = Plugins
+            .Where(plugin => list.Any(model => model.Name != plugin.Name && model.Version != plugin.Version))
+            .ToList();
+            Db.Deleteable(pluginsToRemove).ExecuteCommand();
         }
     }
 }
