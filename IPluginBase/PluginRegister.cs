@@ -500,7 +500,8 @@ namespace IPluginBase
         {
             var pluginsToRemove = Plugins.Where(p => !list.Any(l => l.Name == p.Name && l.Version == p.Version)).ToList();
             Db.Deleteable(pluginsToRemove).ExecuteCommand();
-            Db.Deleteable<ConfigBT>(x => pluginsToRemove.Select(c => c.Id).ToList().Contains(x.PluginId)).ExecuteCommand();
+            var ids = Plugins.Select(p => p.Id).ToList();
+            Db.Deleteable<ConfigBT>(x => !ids.Contains(x.PluginId)).ExecuteCommand();
         }
 
         private void CheckVersion(PluginBT plugin)
