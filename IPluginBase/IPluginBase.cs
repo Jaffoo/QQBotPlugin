@@ -23,7 +23,7 @@ namespace IPluginBase
         /// <summary>
         /// 插件id
         /// </summary>
-        public long PluginId { get; set; }
+        public int PluginId { get; set; }
         /// <summary>
         /// 插件名称(请使用英文)
         /// </summary>

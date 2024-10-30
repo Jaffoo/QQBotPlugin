@@ -18,7 +18,7 @@ namespace IPluginBase
         /// <summary>
         /// 插件id
         /// </summary>
-        public long PluginId { get; set; }
+        public int PluginId { get; set; }
 
         /// <summary>
         /// 键

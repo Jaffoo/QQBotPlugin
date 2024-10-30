@@ -157,6 +157,7 @@ namespace IPluginBase
                     var id = Db.Insertable(temp).ExecuteReturnIdentity();
                     temp.Id = id;
                     instance.PluginId = id;
+                    CheckVersion(temp);
                 }
                 else
                 {
@@ -499,6 +500,20 @@ namespace IPluginBase
         {
             var pluginsToRemove = Plugins.Where(p => !list.Any(l => l.Name == p.Name && l.Version == p.Version)).ToList();
             Db.Deleteable(pluginsToRemove).ExecuteCommand();
+            Db.Deleteable<ConfigBT>(x => pluginsToRemove.Select(c => c.Id).ToList().Contains(x.PluginId)).ExecuteCommand();
+        }
+
+        private void CheckVersion(PluginBT plugin)
+        {
+            var model = Db.Queryable<ConfigBT>().First(x => x.PluginId == plugin.Id);
+            if (model == null) return;
+            var oldVersion = Plugins.Where(x => x.Name == plugin.Name && x.Id != plugin.Id)
+                         .OrderByDescending(x => new Version(x.Version)).FirstOrDefault();
+            if (oldVersion == null) return;
+            var oldConfig = Db.Queryable<ConfigBT>().First(x => x.PluginId == oldVersion.Id);
+            if (oldConfig == null) return;
+            oldConfig.PluginId = plugin.Id;
+            Db.Insertable(oldConfig).ExecuteCommand();
         }
     }
 }
