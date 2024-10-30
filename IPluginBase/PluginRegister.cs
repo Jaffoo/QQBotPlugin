@@ -157,7 +157,6 @@ namespace IPluginBase
                     var id = Db.Insertable(temp).ExecuteReturnIdentity();
                     temp.Id = id;
                     instance.PluginId = id;
-                    CheckVersion(temp);
                 }
                 else
                 {
@@ -172,8 +171,8 @@ namespace IPluginBase
                     LoadedPlugins.Add(temp, instance);
                 list.Add(temp);
             }
-            if (list.Count != Plugins.Count)
-                DeleteNotExist(list);
+            CheckConfaigs();
+            CheckPlugins(list);
         }
 
 
@@ -496,7 +495,7 @@ namespace IPluginBase
             return table.ToString();
         }
 
-        private void DeleteNotExist(List<PluginBT> list)
+        private void CheckPlugins(List<PluginBT> list)
         {
             var pluginsToRemove = Plugins.Where(p => !list.Any(l => l.Name == p.Name && l.Version == p.Version)).ToList();
             Db.Deleteable(pluginsToRemove).ExecuteCommand();
@@ -504,17 +503,28 @@ namespace IPluginBase
             Db.Deleteable<ConfigBT>(x => !ids.Contains(x.PluginId)).ExecuteCommand();
         }
 
-        private void CheckVersion(PluginBT plugin)
+        private void CheckConfaigs()
         {
-            var model = Db.Queryable<ConfigBT>().First(x => x.PluginId == plugin.Id);
-            if (model == null) return;
-            var oldVersion = Plugins.Where(x => x.Name == plugin.Name && x.Id != plugin.Id)
-                         .OrderByDescending(x => new Version(x.Version)).FirstOrDefault();
-            if (oldVersion == null) return;
-            var oldConfig = Db.Queryable<ConfigBT>().First(x => x.PluginId == oldVersion.Id);
-            if (oldConfig == null) return;
-            oldConfig.PluginId = plugin.Id;
-            Db.Insertable(oldConfig).ExecuteCommand();
+            var groups = Plugins.GroupBy(x => x.Name).ToList();
+            foreach (var group in groups)
+            {
+                if (group.Count() <= 1) continue;
+                //取版本最新的两个
+                if (group.Count() >= 2)
+                {
+                    var list = group.OrderByDescending(x => new Version(x.Version)).ToList();
+                    var oldP = list[0];
+                    var newP = list[1];
+                    var configNew = Db.Queryable<ConfigBT>().First(x => x.PluginId == newP.Id);
+                    if (configNew != null) continue;
+                    var configOld = Db.Queryable<ConfigBT>().First(x => x.PluginId == oldP.Id);
+                    if (configOld == null) continue;
+                    configNew = configOld;
+                    configNew.Id = 0;
+                    configNew.PluginId = newP.Id;
+                    Db.Insertable(configNew).ExecuteCommand();
+                }
+            }
         }
     }
 }
