@@ -1,10 +1,10 @@
-﻿using PluginBase;
+﻿using IPluginBase;
 using UnifyBot.Receiver.EventReceiver;
 using UnifyBot.Receiver.MessageReceiver;
 
 namespace TestPlugin;
 
-public class Plugin : IPluginBase
+public class Plugin : PluginBase
 {
     public override string Name { get; set; } = "TestPlugin";
     public override string Desc { get; set; } = "测试用";
