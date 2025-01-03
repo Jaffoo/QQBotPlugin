@@ -416,7 +416,7 @@ namespace IPluginBase
                 StartPlugin(id);
                 return "插件已启用";
             }
-            if (text.Length == 4 & text[..4] == "启用全部")
+            if (text.Length == 4 && text[..4] == "启用全部")
             {
                 StartAllPlugin();
                 return "插件已启用";
@@ -427,7 +427,7 @@ namespace IPluginBase
                 StopPlugin(id);
                 return "插件已禁用";
             }
-            if (text.Length == 4 & text[..4] == "禁用全部")
+            if (text.Length == 4 && text[..4] == "禁用全部")
             {
                 StopAllPlugin();
                 return "插件已禁用";
