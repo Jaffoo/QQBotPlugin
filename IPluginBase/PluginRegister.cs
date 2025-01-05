@@ -8,7 +8,6 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using TBC.CommonLib;
 using UnifyBot;
 using UnifyBot.Receiver.EventReceiver;
 using UnifyBot.Receiver.MessageReceiver;
@@ -233,7 +232,7 @@ namespace IPluginBase
         {
             CheckInit();
             var plugins = Plugins.DeepClone();
-            plugins.ForEach(x => x.Enable = false);
+            plugins!.ForEach(x => x.Enable = false);
             var b = Db.Updateable(plugins).ExecuteCommand() > 0;
             if (b)
             {
@@ -274,7 +273,7 @@ namespace IPluginBase
         {
             CheckInit();
             var list = Plugins.DeepClone();
-            list.ForEach(x => x.Enable = true);
+            list!.ForEach(x => x.Enable = true);
             var b = Db.Updateable(list).ExecuteCommand() > 0;
             if (b)
             {
