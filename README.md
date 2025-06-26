@@ -2,7 +2,7 @@
 基于C#(.net standard2.1)打造的机器人插件注册器，理论基于onebot11的所有机器人均可以使用(仅在qq上试验过)，使用简单，快捷
 
 ### 使用方法
-准备：[Unify](https://github.com/Jaffoo/ShamrockCore.NET)QQ机器人连接框架和[SqlSugar](https://www.donet5.com/Home/Doc)
+准备：[UnifyBot](https://github.com/Jaffoo/ShamrockCore.NET) QQ机器人连接框架和 [SqlSugar](https://www.donet5.com/Home/Doc) 数据库ORM框架
 
 安装：[nuget包](https://github.com/Jaffoo/QQBotPlugin/tree/master/IPluginBase/bin/Debug)(本地打包好的，未上传到微软)
 
