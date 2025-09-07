@@ -67,11 +67,10 @@ namespace IPluginBase
             if (_connConfig == null) throw new Exception("请先调用InitPlugin方法");
         }
 
-        public void InitPlugin(bool rewriteTable = false)
+        public void InitPlugin()
         {
             AutoLoadPlugin();
             LoadPlugins();
-            if (!rewriteTable) InitTable();
         }
 
         public void InitPlugin(SqlSugarClient db, bool rewriteTable = false)
@@ -137,8 +136,11 @@ namespace IPluginBase
                         var pBot = pFields.FirstOrDefault(x => x.Name.Contains("_bot"));
                         pBot?.SetValue(instanceObj, _bot);
                     }
-                    var pConn = pFields.FirstOrDefault(x => x.Name.Contains("_config"));
-                    pConn?.SetValue(instanceObj, _connConfig);
+                    if (_connConfig != null)
+                    {
+                        var pConn = pFields.FirstOrDefault(x => x.Name.Contains("_config"));
+                        pConn?.SetValue(instanceObj, _connConfig);
+                    }
                 }
                 using PluginBase? instance = instanceObj as PluginBase;
                 if (instance == null) continue;

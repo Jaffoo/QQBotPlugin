@@ -9,7 +9,7 @@ internal class Program
 {
     async static Task Main(string[] args)
     {
-        var conn = new Connect("127.0.0.1", 3001, 3000,"523366");
+        var conn = new Connect("www.zink.asia", 3001, 3000, "523366");
         UnifyBot.Bot bot = new(conn);
         await bot.StartAsync();
         Console.WriteLine("QQ机器人服务连接成功");
@@ -23,7 +23,7 @@ internal class Program
 
     static SqlSugarClient InitDb()
     {
-        var master = "Data Source=data/main.db";
+        var master = "Data Source=E:\\Download\\main.db";
         ConnectionConfig config = new()
         {
             ConnectionString = master,
