@@ -193,7 +193,7 @@ namespace IPluginBase
             get
             {
                 if (_logPath != null) return _logPath;
-                var dir = Path.Combine(Environment.CurrentDirectory, $"plugins/logs/{Name}");
+                var dir = Path.Combine(Environment.CurrentDirectory, $"plugins/logs/{Name}/");
                 return dir;
             }
             set { _logPath = value; }
