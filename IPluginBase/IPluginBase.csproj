@@ -3,12 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
-    <Version>1.0.7.4</Version>
+    <Version>1.1.0.0</Version>
     <Authors>Jaffoo</Authors>
     <Company>none</Company>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/Jaffoo/QQBotPlugin</RepositoryUrl>
     <PackageProjectUrl>https://github.com/Jaffoo/QQBotPlugin</PackageProjectUrl>
+    <PackageReleaseNotes>支持插件依赖第三方库，在插件同级目录创建libs文件夹，在创建一个和插件name属性相同的目录，把依赖放入其中即可</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

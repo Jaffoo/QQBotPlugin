@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 using System.Threading.Tasks;
 using UnifyBot;
 using UnifyBot.Receiver.EventReceiver;
@@ -108,6 +109,31 @@ namespace IPluginBase
         }
 
         /// <summary>
+        /// 加载插件的依赖
+        /// </summary>
+        /// <param name="pluginName"></param>
+        private void LoadRelyDLL(string pluginName)
+        {
+            var path = "plugins/libs/" + pluginName;
+            if (!Directory.Exists(path)) return;
+            var files = new DirectoryInfo(path).GetFiles();
+            foreach (var item in files)
+            {
+                try
+                {
+                    if (item.Extension != ".dll") continue;
+                    byte[] buffurs = File.ReadAllBytes(item.FullName);
+                    using MemoryStream ms = new MemoryStream(buffurs);
+                    AssemblyLoadContext.Default.LoadFromStream(ms);
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+        }
+
+        /// <summary>
         /// 加载插件
         /// </summary>
         private void LoadPlugins()
@@ -117,60 +143,69 @@ namespace IPluginBase
             var files = new DirectoryInfo("plugins").GetFiles();
             foreach (var item in files)
             {
-                if (item.Extension != ".dll") continue;
-                byte[] buffurs = File.ReadAllBytes(item.FullName);
-                Assembly assembly = Assembly.Load(buffurs);
-                // 获取 DLL 中的类型
-                Type[] types = assembly.GetTypes();
-                if (types == null) continue;
-                var type = types.FirstOrDefault(x => !x.Name.Contains("<"));
-                if (type == null) continue;
-                var instanceObj = Activator.CreateInstance(type);
-                // 获取私有属性的 PropertyInfo
-                var pFields = typeof(PluginBase).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
-                // 检查属性信息是否为 null
-                if (pFields != null)
+                try
                 {
-                    if (_bot != null)
+                    if (item.Extension != ".dll") continue;
+                    byte[] buffurs = File.ReadAllBytes(item.FullName);
+                    Assembly assembly = Assembly.Load(buffurs);
+                    // 获取 DLL 中的类型
+
+                    Type[] types = assembly.GetTypes();
+                    if (types == null) continue;
+                    var type = types.FirstOrDefault(x => !x.Name.Contains("<"));
+                    if (type == null) continue;
+                    var instanceObj = Activator.CreateInstance(type);
+                    // 获取私有属性的 PropertyInfo
+                    var pFields = typeof(PluginBase).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+                    // 检查属性信息是否为 null
+                    if (pFields != null)
                     {
-                        var pBot = pFields.FirstOrDefault(x => x.Name.Contains("_bot"));
-                        pBot?.SetValue(instanceObj, _bot);
+                        if (_bot != null)
+                        {
+                            var pBot = pFields.FirstOrDefault(x => x.Name.Contains("_bot"));
+                            pBot?.SetValue(instanceObj, _bot);
+                        }
+                        if (_connConfig != null)
+                        {
+                            var pConn = pFields.FirstOrDefault(x => x.Name.Contains("_config"));
+                            pConn?.SetValue(instanceObj, _connConfig);
+                        }
                     }
-                    if (_connConfig != null)
+                    using PluginBase? instance = instanceObj as PluginBase;
+                    if (instance == null) continue;
+                    LoadRelyDLL(instance.Name);
+                    PluginBT temp;
+                    if (!Plugins.Exists(t => t.Name == instance.Name && t.Version == instance.Version))
                     {
-                        var pConn = pFields.FirstOrDefault(x => x.Name.Contains("_config"));
-                        pConn?.SetValue(instanceObj, _connConfig);
+                        temp = new PluginBT()
+                        {
+                            Name = instance.Name,
+                            Version = instance.Version,
+                            Enable = false,
+                            Usage = instance.Useage,
+                            Desc = instance.Desc
+                        };
+                        var id = Db.Insertable(temp).ExecuteReturnIdentity();
+                        temp.Id = id;
+                        instance.PluginId = id;
                     }
-                }
-                using PluginBase? instance = instanceObj as PluginBase;
-                if (instance == null) continue;
-                PluginBT temp;
-                if (!Plugins.Exists(t => t.Name == instance.Name && t.Version == instance.Version))
-                {
-                    temp = new PluginBT()
+                    else
                     {
-                        Name = instance.Name,
-                        Version = instance.Version,
-                        Enable = false,
-                        Usage = instance.Useage,
-                        Desc = instance.Desc
-                    };
-                    var id = Db.Insertable(temp).ExecuteReturnIdentity();
-                    temp.Id = id;
-                    instance.PluginId = id;
+                        temp = Plugins.FirstOrDefault(x => x.Name == instance.Name && x.Version == instance.Version)!;
+                        instance.PluginId = temp.Id;
+                    }
+                    if (!temp.Enable)
+                    {
+                        JobManager.GetSchedule(instance.JobName)?.Disable();
+                    }
+                    if (!LoadedPlugins.Any(x => x.Key.Name == instance.Name && x.Key.Version == instance.Version))
+                        LoadedPlugins.Add(temp, instance);
+                    list.Add(temp);
                 }
-                else
+                catch
                 {
-                    temp = Plugins.FirstOrDefault(x => x.Name == instance.Name && x.Version == instance.Version)!;
-                    instance.PluginId = temp.Id;
+                    continue;
                 }
-                if (!temp.Enable)
-                {
-                    JobManager.GetSchedule(instance.JobName)?.Disable();
-                }
-                if (!LoadedPlugins.Any(x => x.Key.Name == instance.Name && x.Key.Version == instance.Version))
-                    LoadedPlugins.Add(temp, instance);
-                list.Add(temp);
             }
             CheckConfaigs();
             CheckPlugins(list);
@@ -342,6 +377,7 @@ namespace IPluginBase
                     dir.Delete(true);
                 //删除配置数据
                 Db.Deleteable<ConfigBT>().Where(x => x.PluginId == item.Value.PluginId).ExecuteCommand();
+                item.Value.Dispose();
             }
         }
 
@@ -404,7 +440,7 @@ namespace IPluginBase
             }
             if (text.Length > 4 && text[..4] == "搜索插件")
             {
-                var key = text[4..];
+                var key = text[4..].Trim();
                 var plist = Plugins.Where(x => x.Name.Contains(key)).ToList();
                 if (plist != null && plist.Count > 0)
                     return CreatePluginTable(plist);
@@ -413,7 +449,7 @@ namespace IPluginBase
             }
             if (text.Length > 4 && text[..4] == "启用插件")
             {
-                var id = text[4..].ToInt(0);
+                var id = text[4..].Trim().ToInt(0);
                 StartPlugin(id);
                 return "插件已启用";
             }
@@ -424,7 +460,7 @@ namespace IPluginBase
             }
             if (text.Length > 4 && text[..4] == "禁用插件")
             {
-                var id = text[4..].ToInt(0);
+                var id = text[4..].Trim().ToInt(0);
                 StopPlugin(id);
                 return "插件已禁用";
             }
@@ -435,13 +471,13 @@ namespace IPluginBase
             }
             if (text.Length > 4 && text[..4] == "删除插件")
             {
-                var id = text[4..].ToInt(0);
+                var id = text[4..].Trim().ToInt(0);
                 DelPlugin(id);
                 return "插件已删除";
             }
             if (text.Length > 4 && text[..4] == "插件使用")
             {
-                var id = text[4..].ToInt(0);
+                var id = text[4..].Trim().ToInt(0);
                 var plugin = Plugins.FirstOrDefault(x => x.Id == id);
                 return plugin?.Usage ?? "无使用说明";
             }
@@ -452,7 +488,7 @@ namespace IPluginBase
             }
             if (text.Length > 4 && text[..4] == "禁用任务")
             {
-                var jobName = text[4..];
+                var jobName = text[4..].Trim();
                 var job = JobManager.GetSchedule(jobName);
                 if (job == null)
                     return "任务[" + jobName + "]不存在";
@@ -464,7 +500,7 @@ namespace IPluginBase
             }
             if (text.Length > 4 && text[..4] == "启用任务")
             {
-                var jobName = text[4..];
+                var jobName = text[4..].Trim();
                 var job = JobManager.GetSchedule(jobName);
                 if (job == null)
                     return "任务[" + jobName + "]不存在";
