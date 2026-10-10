@@ -29,5 +29,12 @@ jobs:
         with:
           user: ${{ secrets.NUGET_USER }}
 
+      - name: Debug login outputs (临时)
+        run: |
+          echo "=== toJSON(steps.login.outputs) ==="
+          echo '${{ toJSON(steps.login.outputs) }}'
+          echo "=== login outcome ==="
+          echo '${{ steps.login.outcome }}'
+
       - name: Push to NuGet
         run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
