@@ -13,7 +13,7 @@ internal class Program
         UnifyBot.Bot bot = new(conn);
         await bot.StartAsync();
         Console.WriteLine("QQ机器人服务连接成功");
-        PluginRegister.Instance.InitPlugin(InitDb(), bot);
+        PluginRegister.Instance.InitPlugin(InitDb());
         PluginRegister.Instance.FriendControlPlugin();
         while (true)
         {

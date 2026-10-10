@@ -235,10 +235,7 @@ namespace IPluginBase
                     await UnKnowMessage(unKnow);
                 }
             }
-            catch (Exception)
-            {
-                throw;
-            }
+            catch (Exception) { }
         }
 
         /// <summary>

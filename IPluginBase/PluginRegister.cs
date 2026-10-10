@@ -143,9 +143,9 @@ namespace IPluginBase
             var files = new DirectoryInfo("plugins").GetFiles();
             foreach (var item in files)
             {
+                if (item.Extension != ".dll") continue;
                 try
                 {
-                    if (item.Extension != ".dll") continue;
                     byte[] buffurs = File.ReadAllBytes(item.FullName);
                     Assembly assembly = Assembly.Load(buffurs);
                     // 获取 DLL 中的类型
@@ -202,8 +202,9 @@ namespace IPluginBase
                         LoadedPlugins.Add(temp, instance);
                     list.Add(temp);
                 }
-                catch
+                catch (Exception e)
                 {
+                    File.AppendAllLines("PluginLoadError.log", new List<string>() { $"插件【{item.Name}】加载失败：{e.Message}" });
                     continue;
                 }
             }
@@ -388,9 +389,17 @@ namespace IPluginBase
         {
             foreach (var item in LoadedPlugins)
             {
-                if (item.Key == null || item.Value == null) continue;
-                if (!item.Key.Enable) continue;
-                await item.Value.Excute(mrb, eb, unKnow);
+                try
+                {
+                    if (item.Key == null || item.Value == null) continue;
+                    if (!item.Key.Enable) continue;
+                    await item.Value.Excute(mrb, eb, unKnow);
+                }
+                catch (Exception e)
+                {
+                    File.AppendAllLines("PluginExcuteError.log", new List<string>() { $"插件【{item.Key?.Name}】调用失败：{e.Message}" });
+                    continue;
+                }
             }
         }
         /// <summary>

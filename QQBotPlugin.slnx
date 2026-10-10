@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="IPluginBase/IPluginBase.csproj" />
+  <Project Path="Test/Test.csproj" />
+  <Project Path="TestPlugin/TestPlugin.csproj" />
+</Solution>
