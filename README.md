@@ -4,7 +4,7 @@
 ### 使用方法
 准备：[UnifyBot](https://github.com/Jaffoo/ShamrockCore.NET) QQ机器人连接框架和 [SqlSugar](https://www.donet5.com/Home/Doc) 数据库ORM框架
 
-安装：[nuget包](https://github.com/Jaffoo/QQBotPlugin/tree/master/IPluginBase/bin/Debug)(本地打包好的，未上传到微软)
+安装：包管理器搜索 IPluginBase
 
 PluginRegister.Instance.InitPlugin(db,bot) //db是sqlsugar的数据库上下文，bot是unifybot的对象；存在重载，自行查看；必须首先调用
 
